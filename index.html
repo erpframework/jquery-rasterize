@@ -1,0 +1,320 @@
+<!doctype html>
+<head>
+	<meta charset="utf-8" />
+	<link rel="shortcut icon" href="images/musclesoft-64px.png" />
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script src="vendor/rasterizeHTML.allinone.js"></script>
+	<script src="jquery.rasterize.js"></script>
+	<script>
+		var toFavicon = function(collection, type, quality) {
+			return collection.rasterize({ to: 'favicon', type: type, quality: quality });
+		};
+		var toImage = function(collection, type, quality) {
+			return collection.rasterize({ to: '.preview', attr: 'src', preload: true, type: type, quality: quality });
+		};
+		var toIframe = function(type, quality) {
+			$(':root').rasterize({ to: 'iframe', attr: 'src', type: type, quality: quality });
+		}
+		var toThumbnail = function(type, quality) {
+			$(':root').rasterize({ to: '#thumbnail img', attr: 'src', type: type, quality: quality }).
+					rasterize({ to: '#thumbnail', attr: 'href', type: type, quality: quality });
+		}
+		var toWindow = function(window, type, quality) {
+			$(':root').rasterize({ type: type, quality: quality, done: function(url) { window.location = url; } });
+		}
+		// This example uses some sophisticated techniques for animation performance
+		// * preloading to reduce Firefox image flicker
+		// * low number of frames to reduce Firefox favicon flicker (no preloading available)
+		// * pre-rendering for smoother image switching
+		// * caching to reduce resource consumption
+		var render = function() {
+			var steps = 4;
+			var frame = Math.round($('#counter').css('opacity') * steps);
+			if (lastFrame === frame) {
+				return;
+			}
+			lastFrame = frame;
+			var val = $('#counter_input').val();
+			var number = $('#counter');
+			if (number.text() !== val) {
+				frameCache.length = 0;
+				number.text(val);
+			}
+			var startFrame = 0;
+			var endFrame = steps;
+			var cached = frameCache[frame];
+			if (cached) {
+				var startFrame = frame;
+				var endFrame = frame;
+			}
+			var type = getType();
+			var quality = getQuality();
+			for (frame = startFrame; frame <= endFrame; frame++) {
+				var elements = cached;
+				if (!elements) {
+					elements = $();
+					$('#bg_layer_toggle:checked').length && (elements = elements.add('#bg_layer'));
+					$('#image_layer_toggle:checked').length && (elements = elements.add('#image_layer'));
+					$('#text_layer_toggle:checked').length && (elements = elements.add('#text_layer'));
+					$('#counter').css('opacity', frame/steps);
+				}
+				$('#update_favicon:checked').length && (elements = toFavicon(elements, type, quality));
+				$('#update_image:checked').length && (elements = toImage(elements, type, quality));
+				frameCache[frame] = elements;
+			}
+			$('.show.input').toggle($('#show_input:checked').length > 0);
+		};
+		var flash = function(s) {
+		       var newOpacity = s.css("opacity") == 0 ? 1 : 0;
+		       s.animate({ opacity: newOpacity }, { duration: 200, step: render, done: render }).animate({ opacity: newOpacity }, { duration: 200 + newOpacity * 900, done: function() {
+		             flash(s);
+		       } });
+		};
+		var getType = function()	{
+			return $('input[name=type]:checked').val()
+		};
+		var getQuality = function()	{
+			return parseFloat($('#quality').val());
+		};
+		var randomColor = function() {
+			var c = [Math.round(Math.random() * 195), Math.round(Math.random() * 195), Math.round(Math.random() * 195)];
+			$('#bg').css({backgroundColor: 'rgb('+(c[0]+30)+','+(c[1]+30)+','+(c[2]+30)+')', borderTopColor: 'rgb('+(c[0]+60)+','+(c[1]+60)+','+(c[2]+60)+')', borderBottomColor: 'rgb('+c[0]+','+c[1]+','+c[2]+')'});
+			frameCache.length = 0;
+		};
+
+		var frameCache = new Array();
+		var lastFrame = null;
+
+		$(document).ready(function() {
+			randomColor();
+			flash($("#counter"));
+			$("input[type=checkbox]").on('change', function() { frameCache.length = 0; render(); });
+		});
+	</script>
+	<style>
+		html {
+			background: #fff;
+		}
+		div, h1, h2, h3 {
+			font-family: sans-serif;
+			font-weight: normal;
+			font-size: 15px;
+			margin-top: 0;
+		}
+		h1 {
+			font-size: 24px;
+			color: #666;
+			text-align: center;
+		}
+		fieldset {
+			background: #404;
+			color: #ddd;
+			border: none;
+			border-radius: 15px;
+			padding: 1ex;
+			text-align: center;
+			margin-bottom: 1em;
+		}
+		fieldset + fieldset {
+			background: #600;
+		}
+		fieldset + fieldset + fieldset {
+			background: #320;
+		}
+		fieldset + fieldset + fieldset + fieldset {
+			background: #ddd;
+			color: #777;
+		}
+		.output, .input {
+			background: #f2f2f2;
+			color: #666;
+			position: relative;
+			width: 185px;
+			height: 125px;
+			display: inline-block;
+			text-align: left;
+			vertical-align: top;
+			border-radius: 15px;
+			padding: 13px;
+			margin: 1ex;
+			overflow: hidden;
+		}
+		input[type=text] {
+			width: 3ex;
+		}
+		.preview {
+			vertical-align: middle;
+		}
+		#thumbnail {
+			text-align: center;
+			display: block;
+		}
+		#thumbnail img {
+			max-width: 100%;
+			max-height: 85px;
+			border: none;
+		}
+		.right {
+			clear: right;
+			float: right;
+		}
+	</style>
+</head>
+<body>
+	<h1>jQuery Rasterize Examples</h1>
+	<fieldset>
+		<div class="input">
+			<h2>
+				<label class="right"><input type="checkbox" id="show_input" /> show</label>
+				Input Layers
+			</h2>
+			<button class="right" onclick="randomColor()">
+				Random
+			</button>
+			<div>
+				<label>
+					<input id="bg_layer_toggle" type="checkbox" checked="checked" />
+					Back&shy;ground
+				</label>
+			</div>
+			<div>
+				<label>
+					<input id="image_layer_toggle" type="checkbox" checked="checked" />
+					Image
+				</label>
+			</div>
+			<div>
+				<label>
+					<input id="text_layer_toggle" type="checkbox" checked="checked" />
+					Flashing number
+				</label>
+				<input type="text" id="counter_input" value="4" />
+			</div>
+		</div>
+		<div class="input show">
+			<h2>
+				Input Layers
+			</h2>
+			<div style="float:left;position:relative;width:64px;height:64px;" id="bg_layer">
+				<div id="bg" style="
+						position: absolute;
+						left: 0;
+						bottom: 0;
+						top: 0;
+						right: 0;
+						border-radius: 70% 40% 70% 40%;border:24px solid;
+						border-width: 18px 0px 18px 0px;
+						"></div>
+			</div>
+			<div style="float:left;position:relative;width:64px;height:64px;" id="image_layer">
+				<img src="images/musclesoft-64px.png" style="
+						position: absolute;
+						width: 100%;
+						top: 0;
+						left: 0;
+						" />
+			</div>
+			<div style="position:relative;float:right;top:-64px;width:64px;height:64px;" id="text_layer">
+				<div id="counter" style="
+						font-size: 36px;
+						border: 6px solid #fff;
+						background: linear-gradient(to bottom, #f85032 0%,#f16f5c 50%,#f6290c 51%,#f02f17 71%,#e73827 100%);
+						box-shadow: -2px 4px 2px rgba(0, 0, 0, 0.7);
+						position: absolute;
+						top: -3%;
+						right: -3%;
+						font-family: sans-serif;
+						line-height: 70%;
+						font-weight: bold;
+						text-align: center;
+						height: 42%;
+						min-width: 42%;
+						padding: 9%;
+						color: #fff;
+						border-radius: 100px;
+						"></div>
+			</div>
+		</div>
+		<div class="input">
+			<h2>Preferred Image Type</h2>
+			<label>
+				<input type="radio" name="type" value="image/bmp" /> BMP
+			</label>
+			<div>
+				<label>
+					<input type="radio" name="type" value="image/jpeg" /> JPEG,
+				</label>
+				quality
+				<select id="quality">
+					<option>0</option>
+					<option>0.2</option>
+					<option>0.4</option>
+					<option>0.6</option>
+					<option selected="selected">0.8</option>
+					<option>1</option>
+				</select>
+			</div>
+			<div>
+				<label>
+					<input type="radio" name="type" value="image/png" /> PNG
+				</label>
+			</div>
+			<div>
+				<label>
+					<input type="radio" name="type" value="image/webp" /> WebP
+				</label>
+			</div>
+		</div>
+	</fieldset>
+	<fieldset>
+		<div class="output">
+			<label>
+				<input id="update_image" type="checkbox" checked="checked" />
+				Rasterize to Image
+			</label>
+			<p>
+			<img class="preview" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" style="height:16px">
+			<img class="preview" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" style="height:32px">
+			<img class="preview" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+		</div>
+		<div class="output">
+			<label>
+				<input id="update_favicon" type="checkbox" checked="checked" />
+				Rasterize to Favicon
+			</label>
+			<p>
+			See browser tab.
+		</div>
+	</fieldset>
+	<fieldset>
+		<div class="output" onclick="">
+			<h2>Rasterize Document</h2>
+			<p>
+			<button onclick="toWindow(window, getType(), getQuality())">
+				Into this window
+			</button>
+			<p>
+			<button onclick="toWindow(window.open(), getType(), getQuality())">
+				Into a new window
+			</button>
+		</div>
+		<div class="output">
+			<button class="right" onclick="toIframe(getType(), getQuality())">Update</button>
+			<h3>Into Iframe</h3>
+			<iframe width="175" height="80"></iframe>
+		</div>
+		<div class="output">
+			<button class="right" onclick="toThumbnail(getType(), getQuality())">
+				Update
+			</button>
+			<h3>As Thumbnail</h3>
+			<a id="thumbnail" href="#">
+				<img class="thumbnail" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+			</a>
+		</div>
+	</fieldset>
+	<fieldset>
+		Powered by <a href="http://cburgmer.github.io/rasterizeHTML.js/">rasterizeHTML.js</a>.
+		Not available in Internet Explorer.
+	</fieldset>
+</body>

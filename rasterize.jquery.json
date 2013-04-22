@@ -1,0 +1,30 @@
+{
+	"name": "rasterize",
+	"title": "jQuery Rasterize",
+	"version": "0.1.0",
+	"description": "Render parts or all of your document to images and favicons. Based on C. Burgmer's rasterizeHTML.js.",
+	"keywords": [
+		"rasterizeHTML",
+		"favicon",
+		"icon",
+		"image",
+		"rasterize"
+	],
+	"author": {
+		"name": "Diamond/Musclesoft Crew"
+	},
+	"licenses": [
+		{
+			"type": "MIT",
+			"url": "http://musclesoft.github.com/jquery-rasterize/LICENSE.txt"
+		}
+	],
+	"bugs": "https://github.com/musclesoft/jquery-rasterize/issues",
+	"demo": "http://musclesoft.github.com/jquery-rasterize/",
+	"docs": "https://github.com/musclesoft/jquery-rasterize/wiki",
+	"homepage": "https://github.com/musclesoft/jquery-rasterize",
+	"dependencies": {
+		"jquery": ">=1.9",
+		"rasterizeHTML.js": ">=0.1.0"
+	}
+}
