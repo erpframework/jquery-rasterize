@@ -100,5 +100,6 @@
 				this.parentNode.insertBefore(this, this.nextSibling);
 			}
 		});
+		options.done && options.done(dataUrl);
 	};
 })(jQuery);
